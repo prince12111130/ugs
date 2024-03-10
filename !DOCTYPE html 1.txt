@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trello-like Board</title>
+  <link rel="stylesheet" href="https://unpkg.com/tailwindcss@2.0.3/dist/tailwind.min.css">
+  <style>
+    .card-placeholder {
+      background-color: #e2e8f0;
+      border: 2px dashed #718096;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="container mx-auto">
+    <div class="flex">
+      <div class="w-1/3 p-4" @dragover.prevent @drop="onDrop('todo')">
+        <div class="bg-gray-200 p-2 rounded">
+          <h2 class="text-lg font-bold mb-2">To Do</h2>
+          <div v-for="card in todoCards" :key="card.id" class="bg-white p-2 mb-2 rounded shadow"
+               draggable="true" @dragstart="onDragStart(card, 'todo')" @dragend="onDragEnd">
+            {{ card.text }}
+          </div>
+          <input v-model="newTodo" @keyup.enter="addTodo" type="text" placeholder="Add new todo" class="w-full p-2 rounded">
+        </div>
+      </div>
+      <div class="w-1/3 p-4" @dragover.prevent @drop="onDrop('inProgress')">
+        <div class="bg-gray-200 p-2 rounded">
+          <h2 class="text-lg font-bold mb-2">In Progress</h2>
+          <div v-for="card in inProgressCards" :key="card.id" class="bg-white p-2 mb-2 rounded shadow"
+               draggable="true" @dragstart="onDragStart(card, 'inProgress')" @dragend="onDragEnd">
+            {{ card.text }}
+          </div>
+          <input v-model="newInProgress" @keyup.enter="addInProgress" type="text" placeholder="Add new in progress" class="w-full p-2 rounded">
+        </div>
+      </div>
+      <div class="w-1/3 p-4" @dragover.prevent @drop="onDrop('done')">
+        <div class="bg-gray-200 p-2 rounded">
+          <h2 class="text-lg font-bold mb-2">Done</h2>
+          <div v-for="card in doneCards" :key="card.id" class="bg-white p-2 mb-2 rounded shadow"
+               draggable="true" @dragstart="onDragStart(card, 'done')" @dragend="onDragEnd">
+            {{ card.text }}
+          </div>
+          <input v-model="newDone" @keyup.enter="addDone" type="text" placeholder="Add new done" class="w-full p-2 rounded">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data: {
+        todoCards: [
+          { id: 1, text: 'Task 1' },
+          { id: 2, text: 'Task 2' },
+          { id: 3, text: 'Task 3' }
+        ],
+        inProgressCards: [
+          { id: 4, text: 'Task 4' },
+          { id: 5, text: 'Task 5' }
+        ],
+        doneCards: [
+          { id: 6, text: 'Task 6' }
+        ],
+        newTodo: '',
+        newInProgress: '',
+        newDone: '',
+        draggedCard: null,
+        sourceList: ''
+      },
+      methods: {
+        addTodo() {
+          if (this.newTodo.trim() !== '') {
+            this.todoCards.push({ id: Date.now(), text: this.newTodo.trim() });
+            this.newTodo = '';
+          }
+        },
+        addInProgress() {
+          if (this.newInProgress.trim() !== '') {
+            this.inProgressCards.push({ id: Date.now(), text: this.newInProgress.trim() });
+            this.newInProgress = '';
+          }
+        },
+        addDone() {
+          if (this.newDone.trim() !== '') {
+            this.doneCards.push({ id: Date.now(), text: this.newDone.trim() });
+            this.newDone = '';
+          }
+        },
+        onDragStart(card, list) {
+          this.draggedCard = card;
+          this.sourceList = list;
+        },
+        onDragEnd() {
+          this.draggedCard = null;
+          this.sourceList = '';
+        },
+        onDrop(destinationList) {
+          if (this.draggedCard && this.sourceList !== destinationList) {
+            switch (destinationList) {
+              case 'todo':
+                this.todoCards.push(this.draggedCard);
+                break;
+              case 'inProgress':
+                this.inProgressCards.push(this.draggedCard);
+                break;
+              case 'done':
+                this.doneCards.push(this.draggedCard);
+                break;
+            }
+            // Remove the card from the source list
+            switch (this.sourceList) {
+              case 'todo':
+                this.todoCards = this.todoCards.filter(card => card.id !== this.draggedCard.id);
+                break;
+              case 'inProgress':
+                this.inProgressCards = this.inProgressCards.filter(card => card.id !== this.draggedCard.id);
+                break;
+              case 'done':
+                this.doneCards = this.doneCards.filter(card => card.id !== this.draggedCard.id);
+                break;
+            }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
